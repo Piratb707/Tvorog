@@ -36,26 +36,30 @@ async def start_cmd(message: types.Message) -> None:
 # Функция принимает дданные от пользователя и передает в машину состояний
 @dp.message_handler(commands=['order'])
 async def order_cmd(message: types.Message) -> None:
-    await message.reply("Напишите что вы хотите заказать в свободной форме "
-                        "\n<b>Например:</b> \n10 блинчиков с творогом,"
-                        "\n2 сырника и 900 г творога 4%. ",
-                        parse_mode='HTML')
+    await bot.send_message(chat_id=message.from_user.id,
+                           text = 'Напишите что вы хотите заказать в свободной форме \n<b>Например:</b> \n10 блинчиков с творогом,\n2 сырника и 900 г творога 4%.',
+                           parse_mode='HTML')
     await OrderStatesGroup.product.set()  # Установка состояния выбора продукта
+    await message.delete()
 
 @dp.message_handler(state=OrderStatesGroup.product)
 async def load_product(message: types.Message, state: FSMContext) -> None:
     async with state.proxy() as data:
         data['product'] = message.text
 
-    await message.reply('Укажите ваш номер телефона для связи.')
+    await bot.send_message(chat_id=message.from_user.id,
+                           text='Укажите ваш номер телефона для связи.')
     await OrderStatesGroup.next()
+    await message.delete()
 @dp.message_handler(state=OrderStatesGroup.phone)
 async def load_pnumber(message: types.Message, state: FSMContext) -> None:
     async with state.proxy() as data:
         data['phone'] = message.text
 
-    await message.reply('Укажите адрес доставки или напишите слово самовывоз для замовывоза')
+    await bot.send_message(chat_id=message.from_user.id,
+                           text='Укажите адрес доставки или напишите слово самовывоз для замовывоза')
     await OrderStatesGroup.next()
+    await message.delete()
 @dp.message_handler(state=OrderStatesGroup.adress)
 async def load_adress(message: types.Message, state: FSMContext) -> None:
     async with state.proxy() as data:
@@ -64,8 +68,10 @@ async def load_adress(message: types.Message, state: FSMContext) -> None:
                                chat_id=message.from_user.id)
         await bot.send_message(text=f"Новый заказ!\nЗаказ: {data['product']}\nАдрес доставки: {data['adress']}\nТелефон для связи: {data['phone']}",
                                 chat_id=CHAT_ID)
-    await message.reply(f"Спасибо за заказ!C вами свяжутся для подтверждения заказа.")
+    await bot.send_message(chat_id=message.from_user.id,
+                           text="Спасибо за заказ!C вами свяжутся для подтверждения заказа.")
     await state.finish()
+    await message.delete()
 
 # !!! КОНЕЦ ФУНКЦИИ ПРИЕМА ЗАКАЗА !!!
 
@@ -101,7 +107,6 @@ async def send_image(message: types.Message):
                            parse_mode='HTML',
                            reply_markup=ReplyKeyboardRemove())
     await message.delete()
-
 
 if __name__ == '__main__':
     executor.start_polling(dp, skip_updates=True, on_startup=on_startup)
