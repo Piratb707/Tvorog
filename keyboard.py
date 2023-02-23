@@ -1,8 +1,6 @@
-from aiogram.types import ReplyKeyboardMarkup,KeyboardButton,InlineKeyboardMarkup
+from aiogram.types import ReplyKeyboardMarkup, InlineKeyboardButton, InlineKeyboardMarkup
 
-kb = ReplyKeyboardMarkup(resize_keyboard=True)
-b1 = KeyboardButton('/help')
-kb.insert(b1)
+ikb = InlineKeyboardMarkup(row_width=2)
+ib1 = InlineKeyboardButton(text="Назад")
 
-ikb = InlineKeyboardMarkup(row=2)
-ib = InlineKeyboardMarkup()
+ikb.add(ib1)

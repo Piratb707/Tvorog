@@ -70,6 +70,7 @@ async def load_adress(message: types.Message, state: FSMContext) -> None:
                                 chat_id=CHAT_ID)
     await bot.send_message(chat_id=message.from_user.id,
                            text="Спасибо за заказ!C вами свяжутся для подтверждения заказа.")
+
     await state.finish()
     await message.delete()
 
@@ -80,14 +81,6 @@ async def comments_cmd(message: types.Message):
     await bot.send_message(chat_id=message.from_user.id,
                            text=COMMENTS,
                            parse_mode='HTML',
-                           reply_markup=ReplyKeyboardRemove())
-    await message.delete()
-
-
-@dp.message_handler(commands=['help'])
-async def help_cmd(message: types.Message):
-    await bot.send_message(chat_id=message.from_user.id,
-                           text=HELP_COMMAND, parse_mode='HTML',
                            reply_markup=ReplyKeyboardRemove())
     await message.delete()
 
