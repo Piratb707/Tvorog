@@ -71,12 +71,17 @@ async def process_help_command(message: types.Message):
 # Обработчик кнопки "Создать заказ"
 @dp.message_handler(Text(equals="Создать заказ 🍽"))
 async def process_order_command(message: types.Message):
-    await message.reply("Какой товар ты хочешь заказать?", reply_markup=cancel_keyboard)
+    await message.reply("Какой продукт Вас инетресует ?\nМожно своими словами или посмотреть в актуальном меню", reply_markup=cancel_keyboard)
     await OrderForm.item.set()
 
 # Обработчик текстового сообщения с названием товара
 @dp.message_handler(state=OrderForm.item)
 async def process_order_item(message: types.Message, state: FSMContext):
+    if message.text == "Отмена":
+        await state.finish()
+        await message.reply("Действие отменено.", reply_markup=main_menu_keyboard)
+        return
+
     async with state.proxy() as data:
         data['item'] = message.text
         await message.reply(f"Введите свой номер телефона для связи в формате +71234567890", reply_markup=cancel_keyboard)
@@ -148,6 +153,9 @@ async def echo_message(message: types.Message):
 @dp.message_handler(commands=['cancel'], state='*')
 @dp.message_handler(Text(equals="Отмена"), state='*')
 async def cancel_order(message: types.Message, state: FSMContext):
+    current_state = await state.get_state()
+    if current_state is None:
+        return
     await state.finish()
     await message.reply("Оформление заказа отменено.", reply_markup=main_menu_keyboard)
 
