@@ -8,6 +8,8 @@ from aiogram.contrib.fsm_storage.memory import MemoryStorage
 from aiogram.dispatcher.filters.state import State, StatesGroup
 from aiogram.utils import executor
 from config import *
+from keyboard import *
+from Tex_Mes import *
 
 # Подключение к базе данных
 conn = sqlite3.connect('database.db')
@@ -24,6 +26,7 @@ cursor.execute('''CREATE TABLE IF NOT EXISTS orders
 # Закрытие соединения с базой данных
 conn.close()
 
+
 # Создание клавиатуры для отмены операции
 cancel_keyboard = ReplyKeyboardMarkup(
     keyboard=[
@@ -34,17 +37,16 @@ cancel_keyboard = ReplyKeyboardMarkup(
     resize_keyboard=True
 )
 
+button1 = KeyboardButton("Создать заказ 🍽")
+button2 = KeyboardButton("Отследить заказ 🕵🏻‍♂️")
+button3 = KeyboardButton("Актуальное меню 👨‍🍳")
+button4 = KeyboardButton("Об авторах ❓")
+button5 = KeyboardButton("Отзывы ✍🏻")
+
 # Создание клавиатуры главного меню
 main_menu_keyboard = ReplyKeyboardMarkup(
-    keyboard=[
-        [
-            KeyboardButton(text="Создать заказ"),
-            KeyboardButton(text="Отследить заказ"),
-            KeyboardButton(text="Актуальное меню")
-        ]
-    ],
     resize_keyboard=True
-)
+).row(button1, button2, button3).row(button4,button5)
 
 # Создание состояний для оформления заказа
 class OrderForm(StatesGroup):
@@ -67,7 +69,7 @@ async def process_help_command(message: types.Message):
     await message.reply(help_text, reply_markup=main_menu_keyboard)
 
 # Обработчик кнопки "Создать заказ"
-@dp.message_handler(Text(equals="Создать заказ"))
+@dp.message_handler(Text(equals="Создать заказ 🍽"))
 async def process_order_command(message: types.Message):
     await message.reply("Какой товар ты хочешь заказать?", reply_markup=cancel_keyboard)
     await OrderForm.item.set()
@@ -102,8 +104,24 @@ async def process_order_phone(message: types.Message, state: FSMContext):
     await state.finish()
     await message.reply("Выберите действие:", reply_markup=main_menu_keyboard)
 
+# Обработчик кнопки "Актуальное меню"
+@dp.message_handler(Text(equals="Актуальное меню 👨‍🍳"))
+async def process_actual_menu(message: types.Message):
+    # Получение актуального меню
+    await message.reply(MENU_PROD,parse_mode="HTML")
+
+@dp.message_handler(Text(equals="Отзывы ✍🏻"))
+async def process_comments(message: types.Message):
+    # Получение актуального меню
+    await message.reply(COMMENTS,parse_mode="HTML")
+
+@dp.message_handler(Text(equals="Об авторах ❓"))
+async def process_about_autors(message: types.Message):
+    # Получение актуального меню
+    await message.reply(DESCRIPTION,parse_mode="HTML")
+
 # Обработчик кнопки "Отследить заказ"
-@dp.message_handler(Text(equals="Отследить заказ"))
+@dp.message_handler(Text(equals="Отследить заказ 🕵🏻‍♂️"))
 async def process_track_command(message: types.Message):
     # Получение списка заказов пользователя из базы данных
     conn = sqlite3.connect('database.db')
