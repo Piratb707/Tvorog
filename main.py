@@ -7,6 +7,7 @@ from aiogram.dispatcher.filters import Text
 from aiogram.contrib.fsm_storage.memory import MemoryStorage
 from aiogram.dispatcher.filters.state import State, StatesGroup
 from aiogram.utils import executor
+import logging
 from config import *
 from keyboard import *
 from Tex_Mes import *
@@ -40,7 +41,7 @@ cancel_keyboard = ReplyKeyboardMarkup(
 button1 = KeyboardButton("Создать заказ 🍽")
 button2 = KeyboardButton("Отследить заказ 🕵🏻‍♂️")
 button3 = KeyboardButton("Актуальное меню 👨‍🍳")
-button4 = KeyboardButton("Об авторах ❓")
+button4 = KeyboardButton("О нас ❓")
 button5 = KeyboardButton("Отзывы ✍🏻")
 
 # Создание клавиатуры главного меню
@@ -79,7 +80,7 @@ async def process_order_command(message: types.Message):
 async def process_order_item(message: types.Message, state: FSMContext):
     if message.text == "Отмена":
         await state.finish()
-        await message.reply("Действие отменено.", reply_markup=main_menu_keyboard)
+        await message.reply("Оформление заказа отменено.", reply_markup=main_menu_keyboard)
         return
 
     async with state.proxy() as data:
@@ -120,7 +121,7 @@ async def process_comments(message: types.Message):
     # Получение актуального меню
     await message.reply(COMMENTS,parse_mode="HTML")
 
-@dp.message_handler(Text(equals="Об авторах ❓"))
+@dp.message_handler(Text(equals="О нас ❓"))
 async def process_about_autors(message: types.Message):
     # Получение актуального меню
     await message.reply(DESCRIPTION,parse_mode="HTML")
@@ -144,20 +145,11 @@ async def process_track_command(message: types.Message):
             text += f"Заказ №{order[0]}\nТовар: {order[3]}\nСтатус: {order[2]}\n\n"
         await message.reply(text, parse_mode=ParseMode.HTML, reply_markup=main_menu_keyboard)
 
+
 # Обработчик текстовых сообщений, не являющихся командами
 @dp.message_handler()
 async def echo_message(message: types.Message):
     await message.reply("Я не понимаю, что вы хотите сделать. Выберите действие из меню.", reply_markup=main_menu_keyboard)
-
-# Обработчик команды /cancel для отмены оформления заказа
-@dp.message_handler(commands=['cancel'], state='*')
-@dp.message_handler(Text(equals="Отмена"), state='*')
-async def cancel_order(message: types.Message, state: FSMContext):
-    current_state = await state.get_state()
-    if current_state is None:
-        return
-    await state.finish()
-    await message.reply("Оформление заказа отменено.", reply_markup=main_menu_keyboard)
 
 # Запуск бота
 if __name__ == '__main__':
