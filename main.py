@@ -7,10 +7,9 @@ from aiogram.dispatcher.filters import Text
 from aiogram.contrib.fsm_storage.memory import MemoryStorage
 from aiogram.dispatcher.filters.state import State, StatesGroup
 from aiogram.utils import executor
-import logging
 from config import *
-from keyboard import *
 from Tex_Mes import *
+
 
 # Подключение к базе данных
 conn = sqlite3.connect('database.db')
@@ -43,11 +42,13 @@ button2 = KeyboardButton("Отследить заказ 🕵🏻‍♂️")
 button3 = KeyboardButton("Актуальное меню 👨‍🍳")
 button4 = KeyboardButton("О нас ❓")
 button5 = KeyboardButton("Отзывы ✍🏻")
+button6 = KeyboardButton("Специальное меню 🍲")
+button7 = KeyboardButton("Cвязаться с менеджером 🤙")
 
 # Создание клавиатуры главного меню
 main_menu_keyboard = ReplyKeyboardMarkup(
     resize_keyboard=True
-).row(button1, button2, button3).row(button4,button5)
+).row(button1, button2, button3).row(button4, button5, button6).row(button7)
 
 # Создание состояний для оформления заказа
 class OrderForm(StatesGroup):
@@ -62,18 +63,14 @@ dp = Dispatcher(bot, storage=MemoryStorage())
 @dp.message_handler(commands=['start'])
 async def process_start_command(message: types.Message):
     await message.reply("Добро пожаловать! Чтобы создать заказ, нажмите кнопку \"Создать заказ\".\nЧтобы отследить заказ, нажмите кнопку \"Отследить заказ\".", reply_markup=main_menu_keyboard)
-
-# Обработчик команды /help
-@dp.message_handler(commands=['help'])
-async def process_help_command(message: types.Message):
-    help_text = "Чтобы создать заказ, нажмите кнопку \"Создать заказ\".\nЧтобы отследить заказ, нажмите кнопку \"Отследить заказ\"."
-    await message.reply(help_text, reply_markup=main_menu_keyboard)
+    await message.delete()
 
 # Обработчик кнопки "Создать заказ"
 @dp.message_handler(Text(equals="Создать заказ 🍽"))
 async def process_order_command(message: types.Message):
     await message.reply("Какой продукт Вас инетресует ?\nМожно своими словами или посмотреть в актуальном меню", reply_markup=cancel_keyboard)
     await OrderForm.item.set()
+    await message.delete()
 
 # Обработчик текстового сообщения с названием товара
 @dp.message_handler(state=OrderForm.item)
@@ -81,6 +78,7 @@ async def process_order_item(message: types.Message, state: FSMContext):
     if message.text == "Отмена":
         await state.finish()
         await message.reply("Оформление заказа отменено.", reply_markup=main_menu_keyboard)
+        await message.delete()
         return
 
     async with state.proxy() as data:
@@ -114,17 +112,32 @@ async def process_order_phone(message: types.Message, state: FSMContext):
 @dp.message_handler(Text(equals="Актуальное меню 👨‍🍳"))
 async def process_actual_menu(message: types.Message):
     # Получение актуального меню
-    await message.reply(MENU_PROD,parse_mode="HTML")
+    await message.reply(MENU_PROD, parse_mode="HTML")
+    await message.delete()
 
 @dp.message_handler(Text(equals="Отзывы ✍🏻"))
 async def process_comments(message: types.Message):
-    # Получение актуального меню
-    await message.reply(COMMENTS,parse_mode="HTML")
+    # Получение отзывов
+    await message.reply(COMMENTS, parse_mode="HTML")
+    await message.delete()
 
 @dp.message_handler(Text(equals="О нас ❓"))
 async def process_about_autors(message: types.Message):
-    # Получение актуального меню
-    await message.reply(DESCRIPTION,parse_mode="HTML")
+    # Получение информации о нас
+    await message.reply(DESCRIPTION, parse_mode="HTML")
+    await message.delete()
+
+@dp.message_handler(Text(equals="Специальное меню 🍲"))
+async def process_cpecial_menu(message: types.Message):
+    # Получение специального меню
+    await message.reply(SPECIAL_MENU, parse_mode="HTML")
+    await message.delete()
+
+@dp.message_handler(Text(equals="Cвязаться с менеджером 🤙"))
+async def process_cpecial_menu(message: types.Message):
+    # Получение специального меню
+    await message.reply(CALL_SOUL, parse_mode="HTML")
+    await message.delete()
 
 # Обработчик кнопки "Отследить заказ"
 @dp.message_handler(Text(equals="Отследить заказ 🕵🏻‍♂️"))
@@ -144,12 +157,14 @@ async def process_track_command(message: types.Message):
         for order in orders:
             text += f"Заказ №{order[0]}\nТовар: {order[3]}\nСтатус: {order[2]}\n\n"
         await message.reply(text, parse_mode=ParseMode.HTML, reply_markup=main_menu_keyboard)
+    await message.delete()
 
 
 # Обработчик текстовых сообщений, не являющихся командами
 @dp.message_handler()
 async def echo_message(message: types.Message):
     await message.reply("Я не понимаю, что вы хотите сделать. Выберите действие из меню.", reply_markup=main_menu_keyboard)
+
 
 # Запуск бота
 if __name__ == '__main__':
