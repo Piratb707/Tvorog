@@ -68,7 +68,7 @@ async def process_start_command(message: types.Message):
 # Обработчик кнопки "Создать заказ"
 @dp.message_handler(Text(equals="Создать заказ 🍽"))
 async def process_order_command(message: types.Message):
-    await message.reply("Какой продукт Вас инетресует ?\nМожно своими словами или посмотреть в актуальном меню", reply_markup=cancel_keyboard)
+    await message.reply("<b>Какой продукт Вас интересует?</b>\nНапишите пожалуйста нименование и количство.\n<pre>Можно написать своими словами или посмотреть в актуальном меню.</pre>", reply_markup=cancel_keyboard, parse_mode='HTML')
     await OrderForm.item.set()
     await message.delete()
 
