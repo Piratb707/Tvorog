@@ -83,7 +83,7 @@ async def process_order_item(message: types.Message, state: FSMContext):
 
     async with state.proxy() as data:
         data['item'] = message.text
-        await message.reply(f"Введите свой номер телефона для связи в формате +71234567890", reply_markup=cancel_keyboard)
+        await message.reply(f"Пожалуйста введите способ связи с Вами.\nЖелательно никнейм в телеграмме. \nНо можно и номер телефона.", reply_markup=cancel_keyboard)
         await OrderForm.next()
 
 # Обработчик текстового сообщения с номером телефона
@@ -102,7 +102,7 @@ async def process_order_phone(message: types.Message, state: FSMContext):
         conn.close()
 
         # Отправка уведомления администратору о новом заказе
-        await bot.send_message(chat_id=CHAT_ID, text=f"Поступил новый заказ №{order_id}\n\nТовар: {data['item']}\nНомер телефона: {data['phone']}")
+        await bot.send_message(chat_id=CHAT_ID, text=f"Поступил новый заказ №{order_id}\n\nТовар: {data['item']}\nДанные для связи: {data['phone']}")
 
     # Возвращение в главное меню
     await state.finish()
@@ -169,4 +169,3 @@ async def echo_message(message: types.Message):
 # Запуск бота
 if __name__ == '__main__':
     executor.start_polling(dp, skip_updates=True)
-
