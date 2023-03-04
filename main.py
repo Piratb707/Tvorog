@@ -17,11 +17,11 @@ cursor = conn.cursor()
 
 # Создание таблицы для пользователей
 cursor.execute('''CREATE TABLE IF NOT EXISTS users
-                  (id INTEGER PRIMARY KEY, name TEXT, phone TEXT)''')
+                  (id INTEGER PRIMARY KEY, name TEXT, phone TEXT, adress TEXT)''')
 
 # Создание таблицы для заказов
 cursor.execute('''CREATE TABLE IF NOT EXISTS orders
-                  (id INTEGER PRIMARY KEY, user_id INTEGER, status TEXT, item TEXT)''')
+                  (id INTEGER PRIMARY KEY, user_id INTEGER, status TEXT, item TEXT, adress TEXT)''')
 
 # Закрытие соединения с базой данных
 conn.close()
@@ -54,6 +54,7 @@ main_menu_keyboard = ReplyKeyboardMarkup(
 class OrderForm(StatesGroup):
     item = State()
     phone = State()
+    adress = State()
 
 # Создание бота и диспетчера
 bot = Bot(token=TOKEN)
@@ -91,18 +92,26 @@ async def process_order_item(message: types.Message, state: FSMContext):
 async def process_order_phone(message: types.Message, state: FSMContext):
     async with state.proxy() as data:
         data['phone'] = message.text
+    async with state.proxy() as data:
+        data['phone'] = message.text
+        await message.reply(f'Пожалуйста напишите адрес для доставки.\nВ случае если вы хотите забрать заказ самостоятельно\nнапишите слово \"Самовывоз\"', reply_markup=cancel_keyboard)
+        await OrderForm.next()
+@dp.message_handler(state=OrderForm.adress)
+async def process_order_dress(message: types.Message, state: FSMContext):
+    async with state.proxy() as data:
+        data['adress'] = message.text
         await message.reply("Спасибо за заказ! Мы свяжемся с вами в ближайшее время.", reply_markup=main_menu_keyboard)
 
         # Добавление заказа в базу данных
         conn = sqlite3.connect('database.db')
         cursor = conn.cursor()
-        cursor.execute("INSERT INTO orders (user_id, status, item) VALUES (?, ?, ?)", (message.from_user.id, "Новый заказ", data['item']))
+        cursor.execute("INSERT INTO orders (user_id, status, item, adress) VALUES (?, ?, ?, ?)", (message.from_user.id, "Новый заказ", data['item'],data['adress']))
         order_id = cursor.lastrowid
         conn.commit()
         conn.close()
 
         # Отправка уведомления администратору о новом заказе
-        await bot.send_message(chat_id=CHAT_ID, text=f"Поступил новый заказ №{order_id}\n\nТовар: {data['item']}\nДанные для связи: {data['phone']}")
+        await bot.send_message(chat_id=CHAT_ID, text=f"Поступил новый заказ №{order_id}\n\nТовар: {data['item']}\nДанные для связи: {data['phone']}\nДоставка: {data['adress']}")
 
     # Возвращение в главное меню
     await state.finish()
